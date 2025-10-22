@@ -1,6 +1,7 @@
 // API Service Layer
 
-const API_BASE_URL = 'http://localhost/template/TechStartup/backend/api';
+// Use environment variable for production, fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/template/TechStartup/backend/api';
 
 // Helper function for API calls
 async function apiCall(endpoint, options = {}) {

@@ -217,6 +217,160 @@ npm run build
 npm run preview
 ```
 
+## Deploying Frontend to Vercel
+
+The frontend can be deployed to Vercel for production hosting while the PHP backend remains on a separate server (XAMPP, shared hosting, or PHP cloud service).
+
+### Prerequisites
+
+1. A Vercel account (sign up at [https://vercel.com](https://vercel.com))
+2. Vercel CLI installed globally (optional but recommended):
+   ```bash
+   npm install -g vercel
+   ```
+3. Your PHP backend hosted and accessible via a public URL
+
+### Step 1: Prepare Backend
+
+First, ensure your PHP backend is accessible online:
+
+**Option A: Use a PHP Hosting Service**
+- Upload the `backend/` folder to any PHP hosting (shared hosting, Railway, Render, etc.)
+- Note your backend API URL (e.g., `https://your-domain.com/backend/api`)
+
+**Option B: Use Ngrok for Testing** (temporary, for development only)
+```bash
+# In XAMPP directory
+ngrok http 80
+# Copy the https URL provided (e.g., https://abc123.ngrok.io)
+# Your API URL will be: https://abc123.ngrok.io/template/TechStartup/backend/api
+```
+
+### Step 2: Deploy to Vercel
+
+#### Method A: Deploy via Vercel Dashboard (Easiest)
+
+1. **Push your code to GitHub** (already done)
+
+2. **Import to Vercel**:
+   - Go to [https://vercel.com/new](https://vercel.com/new)
+   - Click "Import Git Repository"
+   - Select your repository
+   - Configure the project:
+     - **Framework Preset**: Vite
+     - **Root Directory**: `frontend`
+     - **Build Command**: `npm run build`
+     - **Output Directory**: `dist`
+
+3. **Add Environment Variable**:
+   - In the project settings, go to "Environment Variables"
+   - Add the following:
+     - **Name**: `VITE_API_BASE_URL`
+     - **Value**: Your backend API URL (e.g., `https://your-domain.com/backend/api`)
+   - Add it for all environments (Production, Preview, Development)
+
+4. **Deploy**:
+   - Click "Deploy"
+   - Wait for the build to complete
+   - Your app will be live at `https://your-project.vercel.app`
+
+#### Method B: Deploy via Vercel CLI
+
+1. **Navigate to frontend directory**:
+   ```bash
+   cd frontend
+   ```
+
+2. **Login to Vercel**:
+   ```bash
+   vercel login
+   ```
+
+3. **Create .env.production file** (local only, don't commit):
+   ```bash
+   echo "VITE_API_BASE_URL=https://your-domain.com/backend/api" > .env.production
+   ```
+
+4. **Deploy**:
+   ```bash
+   vercel --prod
+   ```
+
+5. **Set Environment Variable** (if not already set):
+   ```bash
+   vercel env add VITE_API_BASE_URL
+   # Enter your backend API URL when prompted
+   # Select all environments
+   ```
+
+### Step 3: Update Backend CORS Settings
+
+Update your backend's CORS configuration to allow requests from your Vercel domain:
+
+Edit `backend/config/config.php`:
+
+```php
+function setCorsHeaders() {
+    // Add your Vercel domain
+    $allowedOrigins = [
+        'http://localhost:5173',
+        'https://your-project.vercel.app'
+    ];
+
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+    if (in_array($origin, $allowedOrigins)) {
+        header("Access-Control-Allow-Origin: $origin");
+    }
+
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    header("Access-Control-Allow-Credentials: true");
+    header("Content-Type: application/json; charset=UTF-8");
+
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit();
+    }
+}
+```
+
+### Step 4: Verify Deployment
+
+1. Visit your Vercel URL: `https://your-project.vercel.app`
+2. Test the login functionality
+3. Try creating a booking
+4. Check browser console for any CORS or API errors
+
+### Continuous Deployment
+
+Once set up, any push to your repository will automatically trigger a new deployment on Vercel:
+
+```bash
+# Make changes to frontend
+git add frontend/
+git commit -m "Update frontend"
+git push
+
+# Vercel will automatically deploy the changes
+```
+
+### Custom Domain (Optional)
+
+To use a custom domain with your Vercel deployment:
+
+1. Go to your project settings on Vercel
+2. Navigate to "Domains"
+3. Add your custom domain
+4. Update your DNS records as instructed
+5. Update the CORS settings in your backend to include the new domain
+
+### Environment Variables Reference
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend API URL | `https://your-domain.com/backend/api` |
+
 ## Troubleshooting
 
 ### CORS Issues
